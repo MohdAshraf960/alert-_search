@@ -5,41 +5,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test_demo/post_model.dart';
 import 'package:test_demo/posts_service.dart';
 
-class PostNotifier extends ChangeNotifier {
+class PostNotifier extends BaseNotifier {
   TextEditingController textEditingController = TextEditingController();
   List<Post> postsList = [];
-  bool isLoading = false;
-  bool noDataFound = false;
+
   final PostService _postService = PostService();
-
-  setLoading(bool value) {
-    isLoading = value;
-    notifyListeners();
-  }
-
-  setData(bool value) {
-    noDataFound = value;
-    notifyListeners();
-  }
 
   FutureOr<void> getPostsLists(String query) async {
     try {
-      setLoading(true);
+      setState(DataState.loading);
+      postsList.clear();
       postsList = await _postService.searchPosts(query);
       if (postsList.isNotEmpty) {
-        setData(true);
+        setState(DataState.success);
+      } else {
+        setState(DataState.empty);
       }
-
-      setData(false);
-      setLoading(false);
     } catch (e) {
-      setData(false);
-      setLoading(false);
+      setState(DataState.error);
       debugPrint(e.toString());
     }
   }
 }
 
-final postNotifierProvider = ChangeNotifierProvider<PostNotifier>(
+final postNotifierProvider = AutoDisposeChangeNotifierProvider<PostNotifier>(
   (_) => PostNotifier(),
 );
+
+enum DataState { init, loading, success, error, submitting, empty }
+
+abstract class BaseNotifier extends ChangeNotifier {
+  DataState dataState;
+  BaseNotifier({this.dataState = DataState.init});
+
+  void setState(DataState state) {
+    dataState = state;
+    notifyListeners();
+  }
+
+  void init() {}
+}

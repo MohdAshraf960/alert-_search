@@ -1,68 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:test_demo/posts_notifier.dart';
 
-class Search extends ConsumerWidget {
-  const Search({super.key});
+class Search<T extends Object> extends StatefulWidget {
+  const Search(
+      {Key? key, required this.displayStringForOption, this.searchRequest})
+      : super(key: key);
+
+  final String Function(T option) displayStringForOption;
+  final Future<List<T>>? searchRequest;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final posts = ref.read(postNotifierProvider);
+  SearchState createState() => SearchState<T>();
+}
+
+class SearchState<T extends Object> extends State<Search<T>> {
+  Iterable<T> options = [];
+  @override
+  Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
       ),
-      child: Container(
-        width: double.infinity,
-        height: MediaQuery.of(context).size.height * 0.40,
-        padding: const EdgeInsets.all(16.0),
-        child: StatefulBuilder(
-          builder: (context, setState) => Column(
+      child: StatefulBuilder(builder: (contex, setState) {
+        return Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.40,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
               TextField(
-                controller: posts.textEditingController,
-                decoration: const InputDecoration(hintText: "Search"),
                 onChanged: (value) {
-                  _debouncedSearch(value, posts);
+                  _debouncedSearch(value);
+                  setState(() {});
                 },
+                decoration: const InputDecoration(
+                  hintText: "Search here...",
+                ),
               ),
-              const SizedBox(height: 16),
               Expanded(
-                child: posts.isLoading == true
-                    ? const Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : posts.noDataFound
-                        ? const Center(
-                            child: Text("No posts found!!!"),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: posts.postsList.length,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                title: Text(
-                                  posts.postsList[index].title,
-                                ),
-                                onTap: () {
-                                  Navigator.pop(
-                                      context, posts.postsList[index]);
-                                },
-                              );
-                            },
-                          ),
-              ),
+                child: ListView.builder(
+                  itemBuilder: (context, index) {
+                    final T option = options.elementAt(index);
+                    return Text(widget.displayStringForOption(option));
+                  },
+                  itemCount: options.length,
+                ),
+              )
             ],
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  void _debouncedSearch(String query, PostNotifier posts) {
+  void _debouncedSearch(String query) {
     Future.delayed(const Duration(milliseconds: 500), () async {
-      await posts.getPostsLists(query);
+      options = await widget.searchRequest ?? [];
     });
   }
 }

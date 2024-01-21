@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 class Post {
   final int id;
   final String title;
@@ -12,4 +13,7 @@ class Post {
       body: json['body'],
     );
   }
+
+  @override
+  String toString() => 'Post(id: $id, title: $title, body: $body)';
 }
