@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class Search<T extends Object> extends StatefulWidget {
   const Search(
-      {Key? key, required this.displayStringForOption, this.searchRequest})
+      {Key? key,
+      required this.displayStringForOption,
+      required this.searchRequest})
       : super(key: key);
 
   final String Function(T option) displayStringForOption;
-  final Future<List<T>>? searchRequest;
+  final FutureOr<List<T>> Function(String) searchRequest;
 
   @override
   SearchState createState() => SearchState<T>();
@@ -14,6 +18,7 @@ class Search<T extends Object> extends StatefulWidget {
 
 class SearchState<T extends Object> extends State<Search<T>> {
   Iterable<T> options = [];
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -30,22 +35,15 @@ class SearchState<T extends Object> extends State<Search<T>> {
             children: [
               TextField(
                 onChanged: (value) {
-                  _debouncedSearch(value);
-                  setState(() {});
+                  setState(() {
+                    _debouncedSearch(value);
+                  });
                 },
                 decoration: const InputDecoration(
                   hintText: "Search here...",
                 ),
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    final T option = options.elementAt(index);
-                    return Text(widget.displayStringForOption(option));
-                  },
-                  itemCount: options.length,
-                ),
-              )
+              dataWidget()
             ],
           ),
         );
@@ -53,9 +51,26 @@ class SearchState<T extends Object> extends State<Search<T>> {
     );
   }
 
+  Expanded dataWidget() {
+    return Expanded(
+      child: ListView.builder(
+        itemBuilder: (context, index) {
+          final T option = options.elementAt(index);
+          return ListTile(
+            onTap: () {
+              Navigator.pop(context, option);
+            },
+            title: Text(widget.displayStringForOption(option)),
+          );
+        },
+        itemCount: options.length,
+      ),
+    );
+  }
+
   void _debouncedSearch(String query) {
     Future.delayed(const Duration(milliseconds: 500), () async {
-      options = await widget.searchRequest ?? [];
+      options = await widget.searchRequest.call(query);
     });
   }
 }

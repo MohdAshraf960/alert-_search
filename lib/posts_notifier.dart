@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test_demo/post_model.dart';
@@ -11,7 +11,7 @@ class PostNotifier extends BaseNotifier {
 
   final PostService _postService = PostService();
 
-  FutureOr<void> getPostsLists(String query) async {
+  FutureOr<List<Post>> getPostsLists(String query) async {
     try {
       setState(DataState.loading);
       postsList.clear();
@@ -21,14 +21,17 @@ class PostNotifier extends BaseNotifier {
       } else {
         setState(DataState.empty);
       }
+      log("POSTS ====> $postsList");
+      return postsList;
     } catch (e) {
       setState(DataState.error);
       debugPrint(e.toString());
+      return [];
     }
   }
 }
 
-final postNotifierProvider = AutoDisposeChangeNotifierProvider<PostNotifier>(
+final postNotifierProvider = ChangeNotifierProvider<PostNotifier>(
   (_) => PostNotifier(),
 );
 

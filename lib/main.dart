@@ -1,8 +1,8 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test_demo/post_model.dart';
+import 'package:test_demo/posts_notifier.dart';
 import 'package:test_demo/search_posts.dart';
 
 void main() {
@@ -20,14 +20,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({super.key});
 
   @override
   MyHomePageState createState() => MyHomePageState();
 }
 
-class MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends ConsumerState<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,10 +37,16 @@ class MyHomePageState extends State<MyHomePage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Autocomplete(
-            optionsBuilder: (text) => (["Fruits", "Veggies"]),
-            displayStringForOption: (option) => "",
-          ),
+          // Autocomplete(
+          //   optionsViewBuilder: (context, onSelected, options) {
+
+          //   },
+          //   optionsBuilder: (text) => (["Fruits", "Veggies"]),
+          //   displayStringForOption: (option) => "",
+          //   fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+
+          //   },
+          // ),
           Center(
             child: ElevatedButton(
               onPressed: () async {
@@ -55,20 +61,14 @@ class MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _showSearchDialog(BuildContext context) async {
+    final posts = ref.watch(postNotifierProvider);
+
     final result = await showDialog<Post>(
       context: context,
       builder: (BuildContext context) {
         return Search<Post>(
           displayStringForOption: (data) => data.title,
-          searchRequest: Future<List<Post>>(
-            () => [
-              Post(
-                id: 1,
-                title: "title",
-                body: "body",
-              )
-            ],
-          ),
+          searchRequest: (query) => posts.getPostsLists(query),
         );
       },
     );
