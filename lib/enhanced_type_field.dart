@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:search_demo/edit_textfield.dart';
 
 class EnhancedTypeAheadField<T> extends StatelessWidget {
   const EnhancedTypeAheadField({
@@ -12,6 +13,8 @@ class EnhancedTypeAheadField<T> extends StatelessWidget {
     required this.onSelected,
     required this.displayStringForOption,
     required this.suggestionsCallback,
+    required this.labelText,
+    this.validator
   });
 
   final TextEditingController controller;
@@ -21,15 +24,24 @@ class EnhancedTypeAheadField<T> extends StatelessWidget {
   final void Function(T) onSelected;
   final String Function(T option) displayStringForOption;
   final FutureOr<List<T>> Function(String) suggestionsCallback;
+  final String labelText;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<T>(
-       
       hideOnSelect: true,
       hideWithKeyboard: true,
       hideOnUnfocus: true,
       controller: controller,
+      builder: (context,controller,node){
+        return  EditTextField(
+          controller: controller,
+          focusNode: node,
+          labelText: labelText,
+          validator: validator,
+        );
+      },
       decorationBuilder: (context, child) => Padding(
         padding: const EdgeInsets.all(16.0),
         child: Material(
